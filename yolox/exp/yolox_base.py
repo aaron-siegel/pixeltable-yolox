@@ -108,8 +108,6 @@ class Exp(BaseExp):
         # nms threshold
         self.nmsthre = 0.65
 
-        self.rand = random.Random(self.seed)
-
     def get_model(self):
         from yolox.models import YoloPafpn, Yolox, YoloxHead
 
@@ -164,13 +162,7 @@ class Exp(BaseExp):
                 "disk": Caching imgs to disk for fast training.
                 None: Do not use cache, in this case cache_data is also None.
         """
-        from yolox.data import (
-            DataLoader,
-            InfiniteSampler,
-            MosaicDetection,
-            TrainTransform,
-            YoloBatchSampler
-        )
+        from yolox.data import DataLoader, InfiniteSampler, MosaicDetection, TrainTransform, YoloBatchSampler
         from yolox.utils import wait_for_the_master
 
         # if cache is True, we will create self.dataset before launch
@@ -229,7 +221,7 @@ class Exp(BaseExp):
 
         return train_loader
 
-    def random_resize(self, data_loader, epoch, rank, is_distributed):
+    def random_resize(self, rank, is_distributed, rand):
         tensor = torch.LongTensor(2).cuda()
 
         if rank == 0:
@@ -238,7 +230,7 @@ class Exp(BaseExp):
                 min_size = int(self.input_size[0] / 32) - self.multiscale_range
                 max_size = int(self.input_size[0] / 32) + self.multiscale_range
                 self.random_size = (min_size, max_size)
-            size = self.rand.randint(*self.random_size)
+            size = rand.randint(*self.random_size)
             size = (int(32 * size), 32 * int(size * size_factor))
             tensor[0] = size[0]
             tensor[1] = size[1]

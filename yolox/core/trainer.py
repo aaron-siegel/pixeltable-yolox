@@ -2,6 +2,7 @@
 
 import datetime
 import os
+from random import Random
 import time
 from loguru import logger
 
@@ -62,6 +63,8 @@ class Trainer:
 
         if self.rank == 0:
             os.makedirs(self.file_name, exist_ok=True)
+
+        self.rand = Random(exp.seed)
 
         setup_logger(
             self.file_name,
@@ -300,7 +303,7 @@ class Trainer:
         # random resizing
         if (self.progress_in_iter + 1) % 10 == 0:
             self.input_size = self.exp.random_resize(
-                self.train_loader, self.epoch, self.rank, self.is_distributed
+                self.rank, self.is_distributed, self.rand
             )
 
     @property
