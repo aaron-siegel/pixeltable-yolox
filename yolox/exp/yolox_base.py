@@ -108,6 +108,8 @@ class Exp(BaseExp):
         # nms threshold
         self.nmsthre = 0.65
 
+        self.rand = random.Random(self.seed)
+
     def get_model(self):
         from yolox.models import YoloPafpn, Yolox, YoloxHead
 
@@ -216,7 +218,7 @@ class Exp(BaseExp):
         # Check https://github.com/pytorch/pytorch/issues/63311 for more details.
 
         def worker_init_reset_seed(worker_id):
-            seed = self.seed ^ worker_id
+            seed = int(self.seed) ^ worker_id
             random.seed(seed)
             torch.set_rng_state(torch.manual_seed(seed).get_state())
             np.random.seed(seed)
@@ -236,7 +238,7 @@ class Exp(BaseExp):
                 min_size = int(self.input_size[0] / 32) - self.multiscale_range
                 max_size = int(self.input_size[0] / 32) + self.multiscale_range
                 self.random_size = (min_size, max_size)
-            size = random.randint(*self.random_size)
+            size = self.rand.randint(*self.random_size)
             size = (int(32 * size), 32 * int(size * size_factor))
             tensor[0] = size[0]
             tensor[1] = size[1]
