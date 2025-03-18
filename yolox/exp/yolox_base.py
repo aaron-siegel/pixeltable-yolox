@@ -3,6 +3,7 @@
 import os
 import random
 
+import numpy as np
 import torch
 import torch.distributed as dist
 import torch.nn as nn
@@ -108,7 +109,7 @@ class Exp(BaseExp):
         self.nmsthre = 0.65
 
     def get_model(self):
-        from yolox.models import Yolox, YoloPafpn, YoloxHead
+        from yolox.models import YoloPafpn, Yolox, YoloxHead
 
         def init_yolo(M):
             for m in M.modules():
@@ -162,12 +163,11 @@ class Exp(BaseExp):
                 None: Do not use cache, in this case cache_data is also None.
         """
         from yolox.data import (
-            TrainTransform,
-            YoloBatchSampler,
             DataLoader,
             InfiniteSampler,
             MosaicDetection,
-            worker_init_reset_seed,
+            TrainTransform,
+            YoloBatchSampler
         )
         from yolox.utils import wait_for_the_master
 
@@ -214,6 +214,13 @@ class Exp(BaseExp):
 
         # Make sure each process has different random seed, especially for 'fork' method.
         # Check https://github.com/pytorch/pytorch/issues/63311 for more details.
+
+        def worker_init_reset_seed(worker_id):
+            seed = self.seed ^ worker_id
+            random.seed(seed)
+            torch.set_rng_state(torch.manual_seed(seed).get_state())
+            np.random.seed(seed)
+
         dataloader_kwargs["worker_init_fn"] = worker_init_reset_seed
 
         train_loader = DataLoader(self.dataset, **dataloader_kwargs)

@@ -47,7 +47,7 @@ class Trainer:
         self.is_distributed = get_world_size() > 1
         self.rank = get_rank()
         self.local_rank = get_local_rank()
-        self.device = "cuda:{}".format(self.local_rank)
+        self.device = f"cuda:{self.local_rank}"
         self.use_model_ema = exp.ema
         self.save_history_ckpt = exp.save_history_ckpt
 
